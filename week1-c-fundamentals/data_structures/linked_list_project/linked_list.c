@@ -46,13 +46,12 @@ node* list2 = NULL;
 add_sensor_reading(&list1, 22.5, 50.0, 1);
 add_sensor_reading(&list2, 23.0, 55.0, 2);
 */
-void add_sensor_reading(node** head, float temp, float hum, uint8_t id){
+sensor_status_t add_sensor_reading(node** head, float temp, float hum, uint8_t id){
     node* new_node = malloc(sizeof(node)); // dynamic memory allocation in heap
     node* current; // temporary pointer to traverse the list
 
     if(new_node == NULL){
-        printf("Failed to allocate memory!\n");
-        return;
+        return SENSOR_ERROR_MEMORY; // memory allocation failed
     }
 
     //Fill node with data
@@ -73,6 +72,8 @@ void add_sensor_reading(node** head, float temp, float hum, uint8_t id){
         }
         current->next = new_node; // add new node at end
     }
+
+    return SENSOR_OK; //success
 }
 //================================================================//
 void print_all_readings(node** head){
@@ -95,11 +96,10 @@ void print_all_readings(node** head){
 }
 //================================================================//
 // Delete a node from the linked list with a given timestamp value
-void delete_specific_reading(node** head, uint32_t time){
+sensor_status_t delete_specific_reading(node** head, uint32_t time){
     // If the list is empty
     if (*head == NULL){
-        printf("List is empty, nothing to delete!\n");
-        return;
+        return SENSOR_ERROR_NOT_FOUND;
     }
 
     node* current = *head; // temporary pointer to traverse the list
@@ -117,7 +117,7 @@ void delete_specific_reading(node** head, uint32_t time){
         }
 
         // If we reached the end, timestamp not found -> return
-        if (current == NULL) return;
+        if (current == NULL) return SENSOR_ERROR_NOT_FOUND;
 
         // disconnect the node to be deleted from the list by linking prev->next to current->next
         prev->next = current->next;
@@ -126,14 +126,15 @@ void delete_specific_reading(node** head, uint32_t time){
     // The node is no longer part of the list, but it still exists in memory
     // Use free to clean up the memory to prevent leaks
     free(current);
+
+    return SENSOR_OK; //success
 }
 //================================================================//
 // Find and print a specific sensor reading by its timestamp
-void find_specific_reading(node** head, uint32_t time){
+sensor_status_t find_specific_reading(node** head, uint32_t time){
     // If the list is empty, nothing to search
     if (*head == NULL){
-        printf("List is empty, nothing to find!\n");
-        return;
+        return SENSOR_ERROR_NOT_FOUND;
     }
     node* current = *head; // temporary pointer to traverse the list
 
@@ -144,8 +145,7 @@ void find_specific_reading(node** head, uint32_t time){
 
     // If we reached the end of the list, the timestamp was not found
     if(current == NULL){
-        printf("Nothing is found!\n");
-        return;
+        return SENSOR_ERROR_NOT_FOUND;
     }
 
     // Print all details of the found node
@@ -155,6 +155,8 @@ void find_specific_reading(node** head, uint32_t time){
                    current->humidity,
                    current->sensor_id,
                    current->status);
+
+    return SENSOR_OK;
 }
 //================================================================//
 // free all nodes in a list
